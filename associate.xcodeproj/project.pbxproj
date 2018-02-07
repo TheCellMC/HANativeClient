@@ -47,6 +47,7 @@
 		9AA79C03200E785000E76464 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AA79C02200E785000E76464 /* Assets.xcassets */; };
 		9AA79C06200E785000E76464 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9AA79C04200E785000E76464 /* LaunchScreen.storyboard */; };
 		9AB6653920225B590012E97A /* nest-leaf-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9AB6653820225B590012E97A /* nest-leaf-icon.png */; };
+		9ABB634F202A54E4003C31DD /* ButtonListDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ABB634E202A54E4003C31DD /* ButtonListDataSource.swift */; };
 		9AC732E42022C7FE00E64A42 /* media-playing.png in Resources */ = {isa = PBXBuildFile; fileRef = 9AC732E22022C7FD00E64A42 /* media-playing.png */; };
 		9AC732E52022C7FE00E64A42 /* media-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 9AC732E32022C7FE00E64A42 /* media-paused.png */; };
 		9AC732E72022C81300E64A42 /* StateButtonMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC732E62022C81300E64A42 /* StateButtonMedia.swift */; };
@@ -103,6 +104,7 @@
 		9AA79C05200E785000E76464 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9AA79C07200E785000E76464 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9AB6653820225B590012E97A /* nest-leaf-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "nest-leaf-icon.png"; sourceTree = "<group>"; };
+		9ABB634E202A54E4003C31DD /* ButtonListDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonListDataSource.swift; sourceTree = "<group>"; };
 		9AC732E22022C7FD00E64A42 /* media-playing.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "media-playing.png"; sourceTree = "<group>"; };
 		9AC732E32022C7FE00E64A42 /* media-paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "media-paused.png"; sourceTree = "<group>"; };
 		9AC732E62022C81300E64A42 /* StateButtonMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateButtonMedia.swift; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 				9A5D040E2026D1EA0083E9F5 /* ButtonsLayout.swift */,
 				9A5D0410202743CF0083E9F5 /* ButtonsDataSource.swift */,
 				9A4A4DDF201BC4A200976489 /* ButtonsListController.swift */,
+				9ABB634E202A54E4003C31DD /* ButtonListDataSource.swift */,
 			);
 			path = "Collection of buttons";
 			sourceTree = "<group>";
@@ -394,6 +397,7 @@
 				9A927D03201A3613002745F8 /* EventManager.swift in Sources */,
 				9A4A4DE9201EDECA00976489 /* StateButtonClimate.swift in Sources */,
 				9A45E9342020F201009F3D37 /* GenericSensor.swift in Sources */,
+				9ABB634F202A54E4003C31DD /* ButtonListDataSource.swift in Sources */,
 				9A1C5F882026673700CE01E4 /* CollectionOfButtonsControler.swift in Sources */,
 				9A03F2BA202292E7001A6894 /* StateButtonLock.swift in Sources */,
 				9AA79BFE200E785000E76464 /* ViewController.swift in Sources */,

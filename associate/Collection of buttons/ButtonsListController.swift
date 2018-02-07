@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AudioToolbox
 
 
 struct UiElement {
@@ -20,26 +21,23 @@ struct LayerProperties {
 
 
 class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextFieldDelegate{
-    
-    var buttonCenter = CGPoint()
-    var buttonHeight = 80
-    var buttonWidth = 120
-    let padding = 10
-    let pageTitleHeight = 40
+    private var buttonCenter = CGPoint()
+    private var buttonHeight = 80
+    private var buttonWidth = 120
+    private let padding = 10
+    private let pageTitleHeight = 40
     var frameWidth = 0
     var buttonsPerRow = 1
     var leftMargin = 0
     var pageSize = 12
-    var pageTitleLables = [Int: UITextField]()
     var positionIndicator = UIView()
     var scrollView : UIScrollView?
     var pageControl : UIPageControl?
-    private var pagingTimer : Timer?
-    //var pans =  [Int: UIPanGestureRecognizer]()
     var pans = [UIPanGestureRecognizer]()
     var userConfig : UserConfig?
-    var allButtons = [String: StateButtonBase]()
+    private var _data = ButtonListDataSource()
     private var floatButtonOrigialLayerProperties: LayerProperties?
+    private var pagingTimer : Timer?
 
     override public func viewDidLoad() {
         super.viewDidLoad()
@@ -60,8 +58,6 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
         self.view.addSubview(self.scrollView!)
         //position indicator
         positionIndicator.backgroundColor = UIColor.gray.withAlphaComponent(0.3)
-        positionIndicator.layer.cornerRadius = 5
-        positionIndicator.clipsToBounds = true
         //Register to events
         self.userConfig = UserConfig.shared
         self.statesUpdated()
@@ -74,13 +70,14 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
         let page = Int(scrollView.contentOffset.x) / Int(scrollView.frame.size.width);
         self.pageControl!.currentPage = page
     }
-        private func statesUpdated() {
+    
+    private func statesUpdated() {
         for s in HomeAssistantDao.shared.allStates.values {
             let entityId = s.entityId
-            let index = self.userConfig!.locationFor(entityId: entityId)
-            let button = self.allButtons[s.entityId]
+            let button = _data.buttonBy(entityId: entityId)
             if (button==nil) {
-                self.addButton(entityId: entityId, atLocation: index)
+                let index = self.userConfig!.indexFor(entityId: entityId)
+                self.addButton(entityId: entityId, atIndex: index)
                 continue
             }
             button!.entityState = s
@@ -89,22 +86,23 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
     
     
     private func setPageTitle (title: String, pageNumber: Int) {
-        var label = pageTitleLables[pageNumber]
+        var label = _data.pageTextFieldBy(pageNumber: pageNumber)
         if (label == nil) {
             let x = frameWidth * pageNumber
-            label = UITextField(frame: CGRect(x: x, y: 0, width: frameWidth, height: pageTitleHeight))
-            label!.layer.shadowColor = UIColor.black.cgColor
-            label!.layer.shadowOpacity = 0.5
-            label!.layer.shadowOffset = CGSize.zero
-            label!.layer.shadowRadius = 1
-            label!.font = UIFont.boldSystemFont(ofSize: CGFloat(Double(pageTitleHeight) * 0.65))
-            label!.returnKeyType = .done
-            label!.delegate = self
-            label!.textAlignment = .center
-            label!.textColor = UIColor.white
-            label!.tag = pageNumber
-            scrollView!.addSubview(label!)
-            pageTitleLables[pageNumber] = label
+            let newTextField = UITextField(frame: CGRect(x: x, y: 0, width: frameWidth, height: pageTitleHeight))
+            newTextField.layer.shadowColor = UIColor.black.cgColor
+            newTextField.layer.shadowOpacity = 0.5
+            newTextField.layer.shadowOffset = CGSize.zero
+            newTextField.layer.shadowRadius = 1
+            newTextField.font = UIFont.boldSystemFont(ofSize: CGFloat(Double(pageTitleHeight) * 0.65))
+            newTextField.returnKeyType = .done
+            newTextField.delegate = self
+            newTextField.textAlignment = .center
+            newTextField.textColor = UIColor.white
+            newTextField.tag = pageNumber
+            scrollView!.addSubview(newTextField)
+            _data.register(textField: newTextField, forPage: pageNumber)
+            label = newTextField
         }
         var page = userConfig!.getOrCreatePage(pageNumber: pageNumber)
         page.title = title
@@ -118,13 +116,13 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
     }
     
     private func createPage(pageNumber: Int) {
-        if (pageTitleLables[pageNumber] != nil) {
+        if (_data.pageTextFieldBy(pageNumber: pageNumber) != nil) {
             return
         }
         let p = userConfig!.getOrCreatePage(pageNumber: pageNumber)
         setPageTitle(title: p.title, pageNumber: pageNumber)
         self.scrollView!.contentSize = CGSize(width: frameWidth * (pageNumber + 1), height: Int(self.view.bounds.height))
-        self.pageControl!.numberOfPages = pageTitleLables.count
+        self.pageControl!.numberOfPages = _data.countPages()
     }
     
     private func viewForIndex(index: Int) -> UIView {
@@ -153,20 +151,18 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
         return index
     }
     
-    private func addButton(entityId: String, atLocation: Int) {
+    private func addButton(entityId: String, atIndex: Int) {
         let temp = StateButtonBase.Init(entityId: entityId)
         if (temp == nil) {
             return
         }
-//        print ("Adding \(entityId) at \(atLocation)")
         let button = temp!
-        button.tag = atLocation
-        button.frame = self.buttonFrameByIndex(index: atLocation)
+        button.tag = atIndex
+        button.frame = self.buttonFrameByIndex(index: atIndex)
         button.entityState = HomeAssistantDao.shared.allStates[entityId]
         //actions
-        //button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
         //add to view
-        let v = viewForIndex(index: atLocation)
+        let v = viewForIndex(index: atIndex)
         v.addSubview(button)
 //        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPressed))
         let pan = UIPanGestureRecognizer(target: self, action: #selector(panButton))
@@ -174,10 +170,7 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
         pan.isEnabled = false
         pans.append(pan)
         //register
-        self.allButtons[entityId] = button
-        self.userConfig!.registerThingLocation(entityId: entityId, index: atLocation)
-//        button.addGestureRecognizer(longPressRecognizer)
-        
+        _data.registerButton(index: atIndex, button: button)
     }
     
     @objc private func longPressed(sender: UILongPressGestureRecognizer)
@@ -194,7 +187,7 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
     func moveButtonToIndex (button: StateButtonBase , newIndex: Int) {
         let newFrame = self.buttonFrameByIndex(index: newIndex)
         button.tag = newIndex
-        self.userConfig!.registerThingLocation(entityId: button.entityId, index: newIndex)
+        _data.registerButton(index: newIndex, button: button)
         let v = viewForIndex(index: newIndex)
         v.bringSubview(toFront: button)
         UIView.animate(withDuration: 0.2, animations: {
@@ -225,13 +218,15 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
 
     }
 
+    //TODO: Functions is where classess go to hide
     @objc func panButton(pan: UIPanGestureRecognizer) {
         let location = pan.location(in: scrollView)
         let button = pan.view as! StateButtonBase
         if pan.state == .began {
             buttonCenter = button.center
-            self.positionIndicator.frame = self.buttonFrameByIndex(index: button.tag)
-            let v = viewForIndex(index: button.tag)
+            let index = button.tag
+            self.positionIndicator.frame = self.buttonFrameByIndex(index: index)
+            let v = viewForIndex(index: index)
             v.addSubview(self.positionIndicator)
             v.bringSubview(toFront: button)
             let layer = button.layer
@@ -255,7 +250,7 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
                 return
             }
             HomeAssistantDao.shared.isPaused = true
-            let otherButton = self.scrollView!.viewWithTag(newIndex!) as? StateButtonBase
+            let otherButton = _data.buttonBy(location: newIndex!)
             if (otherButton != nil) {
                 self.moveButtonToIndex(button: otherButton!, newIndex: originalIndex)
             }
@@ -298,6 +293,10 @@ class ButtonsListController: UIViewController, UIScrollViewDelegate, UITextField
         self.pagingTimer!.invalidate()
         self.pagingTimer = nil
         let newPageNumber = self.pageControl!.currentPage - 1
+        if (newPageNumber < 0) {
+            AudioServicesPlaySystemSound(1521)
+            return
+        }
         self.scrollToPage(pageNumber: newPageNumber)
     }
     @objc private func scrollRight() {

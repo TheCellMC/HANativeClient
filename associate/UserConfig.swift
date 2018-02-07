@@ -26,11 +26,14 @@ struct Page : Codable {
 class UserConfig : Codable  {
     var url : String?
     var haAccessPassword : String?
+    
+    //TODO: This is dumb! No need for duplicate data. Need to use existing button matrix
     private var entityIds = [Int: String]()
     private var pages = [Int: Page]()
     private static var  _shared : UserConfig?
     
     
+    //TODO: Should not be singleton
     static var shared : UserConfig {
         get {
             if (_shared == nil) {
@@ -49,8 +52,7 @@ class UserConfig : Codable  {
         }
         let jsonDecoder = JSONDecoder()
         do {
-//            print (String.init(data: data!, encoding: .utf8)!)
-            var output = try jsonDecoder.decode(UserConfig.self, from: data!)
+            let output = try jsonDecoder.decode(UserConfig.self, from: data!)
             return output
         } catch {
             return UserConfig()
@@ -81,11 +83,10 @@ class UserConfig : Codable  {
         try! saveToDefaults()
     }
     
-    func locationFor (entityId : String) -> Int{
+    func indexFor (entityId : String) -> Int{
         var maxIndex = Int.min
         for e in self.entityIds {
             if (e.value == entityId) {
-//                print ("\(entityId) --> \(e.key)")
                 return e.key
             }
             maxIndex = max(e.key, maxIndex)
@@ -101,13 +102,13 @@ class UserConfig : Codable  {
         return maxIndex + 1
     }
 
-    func registerThingLocation(entityId: String, index: Int) {
+    func register (entityId: String, atIndex: Int) {
         for e in entityIds {
             if (e.value == entityId) {
                 entityIds.removeValue(forKey: e.key)
             }
         }
-        self.entityIds[index] = entityId
+        self.entityIds[atIndex] = entityId
         try! saveToDefaults()
     }
 

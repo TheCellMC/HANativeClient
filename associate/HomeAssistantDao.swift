@@ -9,6 +9,7 @@
 import Foundation
 
 class HomeAssistantDao {
+    //TODO: This is bad - should not Singletone.
     static let shared = HomeAssistantDao()
     static let stateUpdatedEvent = "states-updated"
     static let conectionDetailsUpdatedSuccess = "connection-detailed-updated-success"
@@ -125,7 +126,6 @@ class HomeAssistantDao {
         let body = "{\"entity_id\" : \"" + entityId + "\"}"
         let task = URLSession.shared.uploadTask(with: request, from:body.data(using: .utf8)) { data, response, error in
             self.isPaused = false
-            //            HomeAssistantDao.shared.updateData()
         }
         self.isPaused = true
         task.resume()
